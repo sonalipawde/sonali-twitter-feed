@@ -739,6 +739,15 @@ var __generator = this && this.__generator || function (thisArg, body) {
     };
   }
 };
+var __spreadArray = this && this.__spreadArray || function (to, from, pack) {
+  if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+    if (ar || !(i in from)) {
+      if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+      ar[i] = from[i];
+    }
+  }
+  return to.concat(ar || Array.prototype.slice.call(from));
+};
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
@@ -751,92 +760,95 @@ Object.defineProperty(exports, "__esModule", {
 var api_1 = require("./api");
 require("./styles.css");
 var app = document.getElementById("app");
-(function () {
-  return __awaiter(void 0, void 0, void 0, function () {
-    var err_1;
+var allTweets = [];
+var displayedTweetIds = new Set(); // tweet IDs
+var interval;
+var timeout;
+var afterId = 0;
+function fetchApi() {
+  return __awaiter(this, void 0, void 0, function () {
+    var fetchTweets, uniqueTweets, html_1, err_1;
     return __generator(this, function (_a) {
       switch (_a.label) {
         case 0:
-          _a.trys.push([0, 6,, 7]);
-          // This returns the lastest 10 tweets
-          return [4 /*yield*/, (0, api_1.fetchTweetsByCount)({
-            count: 10
-          })];
-        case 1:
-          // This returns the lastest 10 tweets
-          _a.sent();
-          // Returns tweets posted before a given tweet ID
-          return [4 /*yield*/, (0, api_1.fetchTweetsBeforeId)({
-            beforeId: 1,
-            count: 10
-          })];
-        case 2:
-          // Returns tweets posted before a given tweet ID
-          _a.sent();
-          // Returns tweets posted after a given tweet ID
+          _a.trys.push([0, 2,, 4]);
           return [4 /*yield*/, (0, api_1.fetchTweetsAfterId)({
-            afterId: 1,
-            count: 10
-          })];
-        case 3:
-          // Returns tweets posted after a given tweet ID
-          _a.sent();
-          // Returns tweets posted before a given UNIX timestamp
-          return [4 /*yield*/, (0, api_1.fetchTweetsBeforeTime)({
-            beforeTime: 1,
-            count: 10
-          })];
-        case 4:
-          // Returns tweets posted before a given UNIX timestamp
-          _a.sent();
-          // Returns tweets posted after a given UNIX timestamp
-          return [4 /*yield*/, (0, api_1.fetchTweetsAfterTime)({
-            afterTime: 1,
-            count: 10
-          })];
-        case 5:
-          // Returns tweets posted after a given UNIX timestamp
-          _a.sent();
-          return [3 /*break*/, 7];
-        case 6:
-          err_1 = _a.sent();
-          console.log(err_1);
-          return [3 /*break*/, 7];
-        case 7:
-          return [2 /*return*/];
-      }
-    });
-  });
-})();
-
-(function () {
-  return __awaiter(void 0, void 0, void 0, function () {
-    var tweets, html_1, err_2;
-    return __generator(this, function (_a) {
-      switch (_a.label) {
-        case 0:
-          _a.trys.push([0, 2,, 3]);
-          return [4 /*yield*/, (0, api_1.fetchTweetsByCount)({
+            afterId: afterId,
             count: 10
           })];
         case 1:
-          tweets = _a.sent();
+          fetchTweets = _a.sent();
+          uniqueTweets = fetchTweets.filter(function (tweet) {
+            return !displayedTweetIds.has(tweet.id);
+          });
+          afterId = fetchTweets[0].id; //after this 0th id start fetching
+          // Add new ids to the displayedTweetIds set
+          uniqueTweets.forEach(function (tweet) {
+            displayedTweetIds.add(tweet.id);
+          });
+          allTweets = __spreadArray(__spreadArray([], allTweets, true), uniqueTweets, true);
           html_1 = "";
-          tweets.forEach(function (tweet) {
-            html_1 += "\n          <div class=\"tweet\">\n            \n            <img src=\"" + tweet.image + "\" width=\"50px\" />\n            <div class=\"tweet-text\">" + tweet.text + "</div>\n          </div>\n        ";
+          allTweets.sort(function (a, b) {
+            return b.id - a.id;
+          });
+          allTweets.forEach(function (tweet) {
+            html_1 += "\n          <div class=\"tweet\">\n            " + tweet.id + "\n            <img src=\"" + tweet.image + "\" width=\"50px\" />\n            <div class=\"tweet-text\">" + tweet.text + "</div>\n          </div>\n        ";
           });
           app.innerHTML = html_1;
-          return [3 /*break*/, 3];
+          return [3 /*break*/, 4];
         case 2:
-          err_2 = _a.sent();
-          app.innerHTML = "\n        <div class=\"tweet\">\n          <h3>" + err_2.message + "</h3>\n        </div>";
-          return [3 /*break*/, 3];
+          err_1 = _a.sent();
+          return [4 /*yield*/, fetchApi()];
         case 3:
+          _a.sent();
+          return [3 /*break*/, 4];
+        case 4:
           return [2 /*return*/];
       }
     });
   });
-})();
+}
+
+interval = setInterval(function () {
+  return __awaiter(void 0, void 0, void 0, function () {
+    return __generator(this, function (_a) {
+      switch (_a.label) {
+        case 0:
+          return [4 /*yield*/, fetchApi()];
+        case 1:
+          return [2 /*return*/, _a.sent()];
+      }
+    });
+  });
+}, 5000);
+timeout = setTimeout(fetchApi, 5000);
+var oldVal = 0;
+var newVal = 0;
+window.addEventListener("scroll", function (e) {
+  newVal = window.pageYOffset;
+  if (oldVal < newVal) {
+    // scroll down 
+    clearTimeout(timeout);
+  } else if (oldVal > newVal) {
+    if (newVal === 0) {
+      interval = setInterval(function () {
+        return __awaiter(void 0, void 0, void 0, function () {
+          return __generator(this, function (_a) {
+            switch (_a.label) {
+              case 0:
+                return [4 /*yield*/, fetchApi()];
+              case 1:
+                return [2 /*return*/, _a.sent()];
+            }
+          });
+        });
+      }, 1000);
+    }
+  }
+  oldVal = newVal; //update oldval
+});
+//starts here
+fetchApi();
 },{"./api":"src/api/index.ts","./styles.css":"src/styles.css"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
@@ -862,7 +874,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "39613" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "46357" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];
